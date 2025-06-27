@@ -1,68 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Beauty Webcam by Fla</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       background-color: pink;
+      overflow: hidden;
       font-family: sans-serif;
-      text-align: center;
-    }
-    h1 {
-      margin-top: 30px;
-      color: white;
     }
     #container {
       position: relative;
-      display: inline-block;
-      margin-top: 30px;
+      width: 100vw;
+      height: 100vh;
+      background-color: pink;
     }
     video, canvas {
-      width: 640px;
-      height: 480px;
-      border-radius: 15px;
-      box-shadow: 0 0 15px hotpink;
-      transform: scaleX(-1);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror mode */
+      filter: brightness(1.1) contrast(1.2); /* Efek mencerahkan kulit */
     }
     canvas {
+      z-index: 2;
+      pointer-events: none;
+    }
+    #fotoBtn {
       position: absolute;
-      top: 0;
-      left: 0;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: hotpink;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #fff;
+      cursor: pointer;
+      z-index: 3;
+    }
+    #preview {
+      display: none;
     }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
 </head>
 <body>
-  <h1>Beauty Webcam by Fla📸</h1>
-  <p style="color:white">Klik “Izinkan Kamera”</p>
-
   <div id="container">
     <video id="kamera" autoplay muted></video>
-    <canvas id="overlay" width="640" height="480"></canvas>
+    <canvas id="overlay"></canvas>
+    <button id="fotoBtn">📸 Ambil Foto</button>
+    <a id="downloadLink" download="fotoFla.png" style="display:none;"></a>
   </div>
 
   <script>
     const video = document.getElementById('kamera');
     const canvas = document.getElementById('overlay');
     const context = canvas.getContext('2d');
+    const fotoBtn = document.getElementById('fotoBtn');
+    const downloadLink = document.getElementById('downloadLink');
 
-    async function startWebcam() {
+    // Mulai kamera
+    async function startKamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
       } catch (err) {
-        alert("Gagal mengakses kamera: " + err.message);
+        alert("Gagal membuka kamera: " + err.message);
       }
     }
 
-    async function startDetection() {
+    // Deteksi wajah & gambar lipstick
+    async function startFaceDetection() {
       await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models');
       await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models');
 
       video.addEventListener('play', () => {
         const detect = async () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
           const result = await faceapi
             .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
             .withFaceLandmarks(true);
@@ -71,7 +94,7 @@
 
           if (result && result.landmarks) {
             const mouth = result.landmarks.getMouth();
-            context.fillStyle = 'rgba(255, 0, 120, 0.6)';
+            context.fillStyle = 'rgba(255, 0, 120, 0.5)';
             context.beginPath();
             context.moveTo(mouth[0].x, mouth[0].y);
             for (let i = 1; i < mouth.length; i++) {
@@ -87,8 +110,29 @@
       });
     }
 
-    startWebcam();
-    startDetection();
+    // Ambil foto dari video dan overlay
+    fotoBtn.addEventListener('click', () => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      // mirror video & filter
+      tempCtx.translate(tempCanvas.width, 0);
+      tempCtx.scale(-1, 1);
+      tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+      // draw lipstick overlay
+      tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+
+      const dataURL = tempCanvas.toDataURL("image/png");
+      downloadLink.href = dataURL;
+      downloadLink.click();
+    });
+
+    startKamera();
+    startFaceDetection();
   </script>
 </body>
 </html>
