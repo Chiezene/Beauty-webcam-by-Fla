@@ -1,28 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Beauty Webcam by Fla 💄</title>
   <style>
     body {
+      margin: 0;
       background-color: pink;
-      text-align: center;
       font-family: sans-serif;
+      text-align: center;
     }
     h1 {
-      color: white;
       margin-top: 30px;
+      color: white;
     }
     video, canvas {
-      position: absolute;
-      top: 140px;
-      left: 0;
-      right: 0;
-      margin: auto;
-      width: 360px;
-      height: 270px;
+      width: 400px;
+      height: 300px;
       border-radius: 15px;
-      box-shadow: 0 0 15px #ff69b4;
+      box-shadow: 0 0 15px hotpink;
       transform: scaleX(-1);
+      margin-top: 20px;
+    }
+    #container {
+      position: relative;
+      display: inline-block;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
     }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
@@ -30,28 +37,32 @@
 <body>
   <h1>Beauty Webcam by Fla 💄📸</h1>
   <p style="color:white">Klik “Izinkan Kamera” dan lihat efek lipstick muncul!</p>
-  <video id="kamera" autoplay muted></video>
-  <canvas id="overlay" width="360" height="270"></canvas>
+
+  <div id="container">
+    <video id="kamera" autoplay muted></video>
+    <canvas id="overlay" width="400" height="300"></canvas>
+  </div>
 
   <script>
     const video = document.getElementById('kamera');
     const canvas = document.getElementById('overlay');
     const context = canvas.getContext('2d');
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
+    async function startWebcam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-      })
-      .catch(err => {
-        alert("Gagal membuka kamera: " + err.message);
-      });
+      } catch (err) {
+        alert("Gagal mengakses kamera: " + err.message);
+      }
+    }
 
-    Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models'),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models')
-    ]).then(() => {
+    async function startDetection() {
+      await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models');
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models');
+
       video.addEventListener('play', () => {
-        const draw = async () => {
+        const detect = async () => {
           const result = await faceapi
             .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
             .withFaceLandmarks(true);
@@ -70,11 +81,15 @@
             context.fill();
           }
 
-          requestAnimationFrame(draw);
+          requestAnimationFrame(detect);
         };
-        draw();
+        detect();
       });
-    });
+    }
+
+    startWebcam();
+    startDetection();
   </script>
 </body>
 </html>
+
