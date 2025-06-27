@@ -1,78 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Webcam Cantik by Fla </title>
+  <title>Beauty Webcam by Fla 💄</title>
   <style>
     body {
-      background-color: #ffe0f5;
+      background-color: pink;
       text-align: center;
       font-family: sans-serif;
-      padding-top: 20px;
     }
     h1 {
-      color: #d6006e;
+      color: white;
+      margin-top: 30px;
     }
     video, canvas {
-      margin: 10px auto;
-      display: block;
-      width: 480px;
-      height: 360px;
-      border-radius: 12px;
+      position: absolute;
+      top: 140px;
+      left: 0;
+      right: 0;
+      margin: auto;
+      width: 360px;
+      height: 270px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #ff69b4;
       transform: scaleX(-1);
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
   </style>
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
 </head>
 <body>
-  <h1>Webcam Cantik by Fla📸</h1>
-  <p>Klik “Izinkan Kamera”!</p>
-
-  <video id="kamera" autoplay muted playsinline></video>
-  <canvas id="overlay" width="480" height="360"></canvas>
+  <h1>Beauty Webcam by Fla 💄📸</h1>
+  <p style="color:white">Klik “Izinkan Kamera” dan lihat efek lipstick muncul!</p>
+  <video id="kamera" autoplay muted></video>
+  <canvas id="overlay" width="360" height="270"></canvas>
 
   <script>
     const video = document.getElementById('kamera');
     const canvas = document.getElementById('overlay');
-    const ctx = canvas.getContext('2d');
+    const context = canvas.getContext('2d');
 
-    async function start() {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
-      await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        alert("Gagal membuka kamera: " + err.message);
+      });
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models'),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models')
+    ]).then(() => {
       video.addEventListener('play', () => {
         const draw = async () => {
           const result = await faceapi
             .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
             .withFaceLandmarks(true);
 
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          context.clearRect(0, 0, canvas.width, canvas.height);
 
           if (result && result.landmarks) {
             const mouth = result.landmarks.getMouth();
-            ctx.fillStyle = 'rgba(255, 0, 120, 0.5)';
-            ctx.beginPath();
-            ctx.moveTo(mouth[0].x, mouth[0].y);
+            context.fillStyle = 'rgba(255, 0, 120, 0.5)';
+            context.beginPath();
+            context.moveTo(mouth[0].x, mouth[0].y);
             for (let i = 1; i < mouth.length; i++) {
-              ctx.lineTo(mouth[i].x, mouth[i].y);
+              context.lineTo(mouth[i].x, mouth[i].y);
             }
-            ctx.closePath();
-            ctx.fill();
+            context.closePath();
+            context.fill();
           }
 
           requestAnimationFrame(draw);
         };
         draw();
       });
-    }
-
-    start().catch(err => {
-      alert("Gagal: " + err.message);
-      console.error(err);
     });
   </script>
 </body>
