@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Webcam Cantik by Fla </title>
+  <style>
+    body {
+      background-color: #ffe0f5;
+      text-align: center;
+      font-family: sans-serif;
+      padding-top: 20px;
+    }
+    h1 {
+      color: #d6006e;
+    }
+    video, canvas {
+      margin: 10px auto;
+      display: block;
+      width: 480px;
+      height: 360px;
+      border-radius: 12px;
+      transform: scaleX(-1);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+<body>
+  <h1>Webcam Cantik by Fla📸</h1>
+  <p>Klik “Izinkan Kamera”!</p>
+
+  <video id="kamera" autoplay muted playsinline></video>
+  <canvas id="overlay" width="480" height="360"></canvas>
+
+  <script>
+    const video = document.getElementById('kamera');
+    const canvas = document.getElementById('overlay');
+    const ctx = canvas.getContext('2d');
+
+    async function start() {
+      await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      video.addEventListener('play', () => {
+        const draw = async () => {
+          const result = await faceapi
+            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks(true);
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          if (result && result.landmarks) {
+            const mouth = result.landmarks.getMouth();
+            ctx.fillStyle = 'rgba(255, 0, 120, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(mouth[0].x, mouth[0].y);
+            for (let i = 1; i < mouth.length; i++) {
+              ctx.lineTo(mouth[i].x, mouth[i].y);
+            }
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          requestAnimationFrame(draw);
+        };
+        draw();
+      });
+    }
+
+    start().catch(err => {
+      alert("Gagal: " + err.message);
+      console.error(err);
+    });
+  </script>
+</body>
+</html>
