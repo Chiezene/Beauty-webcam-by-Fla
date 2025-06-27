@@ -14,17 +14,17 @@
       margin-top: 30px;
       color: white;
     }
-    video, canvas {
-      width: 400px;
-      height: 300px;
-      border-radius: 15px;
-      box-shadow: 0 0 15px hotpink;
-      transform: scaleX(-1);
-      margin-top: 20px;
-    }
     #container {
       position: relative;
       display: inline-block;
+      margin-top: 30px;
+    }
+    video, canvas {
+      width: 640px;
+      height: 480px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px hotpink;
+      transform: scaleX(-1);
     }
     canvas {
       position: absolute;
@@ -40,7 +40,7 @@
 
   <div id="container">
     <video id="kamera" autoplay muted></video>
-    <canvas id="overlay" width="400" height="300"></canvas>
+    <canvas id="overlay" width="640" height="480"></canvas>
   </div>
 
   <script>
@@ -71,7 +71,7 @@
 
           if (result && result.landmarks) {
             const mouth = result.landmarks.getMouth();
-            context.fillStyle = 'rgba(255, 0, 120, 0.5)';
+            context.fillStyle = 'rgba(255, 0, 120, 0.6)';
             context.beginPath();
             context.moveTo(mouth[0].x, mouth[0].y);
             for (let i = 1; i < mouth.length; i++) {
@@ -92,4 +92,3 @@
   </script>
 </body>
 </html>
-
